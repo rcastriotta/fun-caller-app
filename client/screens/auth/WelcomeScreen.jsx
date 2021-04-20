@@ -69,26 +69,6 @@ const WelcomeScreen = ({ navigation }) => {
                 <Text style={styles.description}>The world is better with a smile on your face.</Text>
             </View>
 
-
-            {/*  <TouchableOpacity
-                    onPress={() => buttonPressHandler('login')}
-                    style={{ ...styles.button, backgroundColor: hexToRgba(Colors.primary, 0.3) }}
-                    activeOpacity={0.7}
-                >
-                    <Text
-                        style={{ ...styles.buttonText, color: Colors.primary }}
-                    >Login</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => buttonPressHandler('signup')}
-                    style={{ ...styles.button, backgroundColor: Colors.primary }}
-                    activeOpacity={0.7}
-                >
-                    <Text
-                        style={{ ...styles.buttonText, color: 'white' }}
-                    >Signup</Text>
-                </TouchableOpacity>*/}
             <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={loginWithApple}
