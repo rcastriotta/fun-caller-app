@@ -97,10 +97,5 @@ app.all('/detect', async(req, res) => {
     res.status(200).end()
 })
 
-app.all('/sms_callback', async(req, res) => {
-    console.log(req.body['Text']);
-    res.status(200).end();
-})
-
 const PORT = process.env.PORT || 80;
 server.listen(PORT, () => console.log(`Listening on port :${PORT}`))
