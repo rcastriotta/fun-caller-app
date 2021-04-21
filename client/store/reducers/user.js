@@ -6,7 +6,8 @@ const initialState = {
     refreshToken: '',
     email: '',
     coinAmount: 0,
-    watchedVideos: 0
+    watchedVideos: 0,
+    callWarningIgnored: false
 }
 
 const userReducer = (state = initialState, action) => {

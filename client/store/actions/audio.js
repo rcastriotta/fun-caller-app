@@ -38,7 +38,7 @@ export const onPlaybackStatusUpdate = ({ isLoaded, positionMillis, durationMilli
 
 
         if (isLoaded && !started) {
-            uri ? soundPlayer.playAsync() : null;
+            if (uri) soundPlayer.playAsync()
             dispatch(update({
                 started: true,
                 isPlaying: true

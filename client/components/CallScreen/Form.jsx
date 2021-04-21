@@ -4,11 +4,12 @@ import Colors from '../../constants/colors';
 import CallingModal from './CallingModal';
 import { useDispatch, useSelector } from 'react-redux';
 import * as audioActions from '../../store/actions/audio';
+import * as userActions from '../../store/actions/user';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const Form = (props) => {
     const dispatch = useDispatch();
-    const { coinAmount } = useSelector(state => state.user);
+    const { coinAmount, callWarningIgnored } = useSelector(state => state.user);
     const [showModal, setShowModal] = useState(false)
     const scale = new Animated.Value(1);
 
@@ -50,6 +51,11 @@ const Form = (props) => {
         setFormState(prev => ({ ...prev, [type]: { text, valid } }))
     }
 
+    const makeCall = () => {
+        dispatch(audioActions.clearAudio())
+        setShowModal(true)
+    }
+
     const submitHandler = () => {
         if (!formState.friendsNum.valid || !formState.sendFrom.valid) {
             setFormState(prev => ({ ...prev, showErrors: true }))
@@ -59,10 +65,32 @@ const Form = (props) => {
         if (coinAmount < 1) {
             Alert.alert('Not enough tokens!', 'You need at least 1 token(s) to make this call.')
             return;
+        } else if (!callWarningIgnored) {
+            Alert.alert(
+                "Warning",
+                `Are you sure you want to make a prank call to +1 ${formState.friendsNum.text}? They maybe located in one of the following two party recording states CA, PA, FL, IL, MI, WA, MD, MA, CT, NV, NH or MT and you are required to get their consent to record the call`,
+                [
+                    {
+                        text: "Yes, Send Call",
+                        onPress: makeCall
+                    },
+                    {
+                        text: "Yes, Ignore this warning in the future",
+                        onPress: () => {
+                            dispatch(userActions.updateData({ callWarningIgnored: true }))
+                            makeCall()
+                        }
+                    },
+                    {
+                        text: "No",
+                        style: "cancel"
+                    }
+                ],
+                { cancelable: false }
+            );
+        } else {
+            makeCall()
         }
-
-        dispatch(audioActions.clearAudio())
-        setShowModal(true)
     }
 
 

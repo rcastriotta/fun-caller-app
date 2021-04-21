@@ -5,17 +5,24 @@ import { useDispatch } from 'react-redux';
 import * as savedActions from '../../store/actions/saved';
 import { BlurView } from 'expo-blur';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import axios from 'axios';
 
 const CallingModal = (props) => {
     const dispatch = useDispatch();
     const [callState, setCallState] = useState('Calling...')
     const [textColor, setTextColor] = useState('white')
     const [ws, setWs] = useState(null)
+    const [callId, setCallId] = useState(null)
 
-    const closeHandler = () => {
+    const closeHandler = async () => {
         if (ws) {
-            ws.close()
             props.closeModal()
+            if (callId && ws) {
+                await axios.get(`https://b09299482efd.ngrok.io/cancel/${callId}`)
+            }
+            ws.close()
+            setWs(null)
+            setCallId(null)
         }
     }
 
@@ -46,36 +53,48 @@ const CallingModal = (props) => {
 
         ws.onmessage = (e) => {
             const { message, type } = JSON.parse(e.data);
-            if (type === 'success') {
-                ws.close()
-                setTextColor('#00CC6D')
-                setCallState('Call completed!')
-                dispatch(savedActions.addItem({
-                    audio: message,
-                    name: props.name,
-                    number: props.sendTo,
-                    img: props.img
-                }))
-                setTimeout(() => {
-                    props.closeModal()
-                    props.nav.navigate('Saved', { newVal: true })
-                }, 2000)
-            } else if (type === 'not-answered') {
-                ws.close()
-                setTextColor('#FF0247')
-                setCallState(message)
-            } else if (type === 'error') {
-                errorHandler(ws, message)
-            } else {
-                setCallState(message)
+
+            switch (type) {
+                case 'success':
+                    ws.close()
+                    setTextColor('#00CC6D')
+                    setCallState('Call completed!')
+                    dispatch(savedActions.addItem({
+                        audio: message,
+                        name: props.name,
+                        number: props.sendTo,
+                        img: props.img
+                    }))
+                    setTimeout(() => {
+                        props.closeModal()
+                        props.nav.navigate('Saved', { newVal: true })
+                    }, 1500)
+                    break;
+                case 'not-answered':
+                    ws.close()
+                    setTextColor('#FF0247')
+                    setCallState(message)
+                    break;
+                case 'id':
+                    setCallId(message)
+                    break;
+                case 'error':
+                    errorHandler(ws, message)
+                    break;
+                default:
+                    setCallState(message)
             }
         };
 
-        ws.onerror = (err) => {
+        ws.onerror = () => {
             errorHandler(ws, `There's been an error`)
         };
 
-        return () => ws.close()
+        return () => {
+            ws.close()
+            setWs(null)
+            setCallId(null)
+        }
 
     }, [props.visible])
 
