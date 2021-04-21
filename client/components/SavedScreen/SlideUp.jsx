@@ -45,7 +45,6 @@ const styles = StyleSheet.create({
     grab: {
         height: 6,
         marginTop: '3%',
-        marginBottom: '5%',
         alignSelf: 'center',
         width: 50,
         backgroundColor: 'lightgray',

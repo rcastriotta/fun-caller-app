@@ -19,6 +19,12 @@ const CallingModal = (props) => {
         }
     }
 
+    const errorHandler = (ws, message) => {
+        setTextColor('#FF0247')
+        setCallState(message)
+        ws.close()
+    }
+
     useEffect(() => {
         if (!props.visible) {
             return;
@@ -26,25 +32,26 @@ const CallingModal = (props) => {
         setCallState('Calling...')
         setTextColor('white')
 
-        const ws = new WebSocket('ws://01b28c6e0874.ngrok.io')
+        const ws = new WebSocket('ws://b09299482efd.ngrok.io')
         setWs(ws);
 
         ws.onopen = () => {
+            const { sendTo, sendFrom, audio } = props;
             ws.send(JSON.stringify({
-                sendTo: props.sendTo,
-                sendFrom: props.sendFrom,
-                audio: props.audio,
+                sendTo,
+                sendFrom,
+                audio
             }))
         }
 
         ws.onmessage = (e) => {
-            // a message was received   
-            if (e.data.includes('http')) {
+            const { message, type } = JSON.parse(e.data);
+            if (type === 'success') {
                 ws.close()
                 setTextColor('#00CC6D')
                 setCallState('Call completed!')
                 dispatch(savedActions.addItem({
-                    audio: e.data,
+                    audio: message,
                     name: props.name,
                     number: props.sendTo,
                     img: props.img
@@ -53,23 +60,19 @@ const CallingModal = (props) => {
                     props.closeModal()
                     props.nav.navigate('Saved', { newVal: true })
                 }, 2000)
-            } else if (e.data === 'Not answered') {
+            } else if (type === 'not-answered') {
                 ws.close()
                 setTextColor('#FF0247')
-                setCallState(e.data)
+                setCallState(message)
+            } else if (type === 'error') {
+                errorHandler(ws, message)
             } else {
-                setCallState(e.data)
+                setCallState(message)
             }
         };
 
         ws.onerror = (err) => {
-            setTextColor('#FF0247')
-            setCallState('Error')
-            console.log(err.message)
-            ws.close()
-        };
-
-        ws.onclose = () => {
+            errorHandler(ws, `There's been an error`)
         };
 
         return () => ws.close()
@@ -112,7 +115,8 @@ const styles = StyleSheet.create({
     status: {
         fontSize: wp('10%'),
         fontFamily: 'popM',
-        color: 'white'
+        color: 'white',
+        textAlign: 'center'
     },
     exit: {
         marginTop: '20%',
