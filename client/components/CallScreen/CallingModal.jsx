@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, StyleSheet, Text, TouchableOpacity, ImageBackground } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import * as savedActions from '../../store/actions/saved';
@@ -109,7 +109,7 @@ const CallingModal = (props) => {
             <BlurView tint="dark" intensity={100} style={[StyleSheet.absoluteFill, styles.container]}>
                 <Text style={{ ...styles.status, color: textColor }}>{callState}</Text>
                 <TouchableOpacity style={styles.exit} onPress={closeHandler}>
-                    <Text style={styles.exitText}>Close</Text>
+                    <Text style={styles.exitText}>Cancel</Text>
                     <AntDesign name="close" size={20} color="white" />
                 </TouchableOpacity>
             </BlurView>

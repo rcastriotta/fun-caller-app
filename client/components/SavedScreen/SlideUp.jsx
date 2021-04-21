@@ -32,15 +32,10 @@ const SlideUp = (props) => {
 
 const styles = StyleSheet.create({
     scroll: {
-        borderTopRightRadius: 30,
-        borderTopLeftRadius: 30,
+        borderTopRightRadius: 25,
+        borderTopLeftRadius: 25,
         flex: 1,
         marginTop: '5%'
-    },
-    gradient: {
-        paddingBottom: '50%',
-        minHeight: windowHeight * .85,
-        backgroundColor: 'white'
     },
     grab: {
         height: 6,
@@ -51,7 +46,7 @@ const styles = StyleSheet.create({
         borderRadius: 100
     },
     container: {
-        borderRadius: 30,
+        borderRadius: 25,
         backgroundColor: 'white',
         paddingBottom: '50%',
         minHeight: hp('85%')

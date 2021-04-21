@@ -34,13 +34,13 @@ export default SlideUp;
 
 const styles = StyleSheet.create({
     scroll: {
-        borderTopRightRadius: 30,
-        borderTopLeftRadius: 30,
+        borderTopRightRadius: 25,
+        borderTopLeftRadius: 25,
         flex: 1,
         marginTop: '-5%',
     },
     container: {
-        borderRadius: 30,
+        borderRadius: 25,
         backgroundColor: 'white',
         paddingTop: '0%',
         paddingBottom: '50%',

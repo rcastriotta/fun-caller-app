@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     grab: {
         height: 6,
         marginTop: '3%',
-        marginBottom: '8%',
+        marginBottom: '6%',
         alignSelf: 'center',
         width: 50,
         backgroundColor: 'lightgray',
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: 'white',
         paddingHorizontal: '5%',
-        borderRadius: 30,
+        borderRadius: 25,
         flex: 1,
         marginTop: '-10%',
     }
