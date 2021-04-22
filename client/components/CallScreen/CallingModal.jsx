@@ -72,6 +72,7 @@ const CallingModal = (props) => {
                     break;
                 case 'not-answered':
                     ws.close()
+                    setCallId(null)
                     setTextColor('#FF0247')
                     setCallState(message)
                     break;
