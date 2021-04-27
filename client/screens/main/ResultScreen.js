@@ -6,10 +6,11 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  ImageBackground,
 } from "react-native";
 import Colors from "../../constants/colors";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import * as audioActions from "../../store/actions/audio";
 import * as savedActions from "../../store/actions/saved";
 import { BarIndicator } from "react-native-indicators";
@@ -18,13 +19,11 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { BlurView } from "expo-blur";
 
 const ResultScreen = ({ route, navigation }) => {
-  const { number, date, audio } = route.params;
+  const { number, date, audio, uri } = route.params;
   const dispatch = useDispatch();
-  const { completed, isPlaying, isBuffering } = useSelector(
-    (state) => state.audio
-  );
 
   useEffect(() => {
     dispatch(audioActions.playPause(audio));
@@ -53,50 +52,54 @@ const ResultScreen = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.container}>
-        <View style={styles.top}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={backPressHandler}
-            style={styles.goBack}
-          >
-            <Ionicons name="chevron-back" size={24} color={Colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={deletePressHandler}>
-            <Feather name="trash" size={30} color="white" />
-          </TouchableOpacity>
-        </View>
+    <ImageBackground source={{ uri }} style={{ flex: 1 }}>
+      <BlurView intensity={100} style={StyleSheet.absoluteFill}>
+        <SafeAreaView style={styles.screen}>
+          <View style={styles.container}>
+            <View style={styles.top}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={backPressHandler}
+                style={styles.goBack}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={24}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={deletePressHandler}>
+                <Feather name="trash" size={30} color="white" />
+              </TouchableOpacity>
+            </View>
 
-        <View style={styles.info}>
-          <Text style={styles.number}>{number}</Text>
-          <Text style={styles.date}>{date}</Text>
-          <BarIndicator
-            style={styles.indicator}
-            size={70}
-            color="white"
-            count={5}
-          />
-        </View>
+            <View style={styles.info}>
+              <Text style={styles.number}>{number}</Text>
+              <Text style={styles.date}>{date}</Text>
+              <BarIndicator
+                style={styles.indicator}
+                size={70}
+                color="white"
+                count={5}
+              />
+            </View>
 
-        <View style={styles.playController}>
-          <AudioTrack
-            isPlaying={isPlaying}
-            completed={completed}
-            isBuffering={isBuffering}
-            width={"65%"}
-            onPress={() => dispatch(audioActions.playPause(audio))}
-          />
-        </View>
-      </View>
-    </SafeAreaView>
+            <View style={styles.playController}>
+              <AudioTrack
+                audio={audio}
+                onPress={() => dispatch(audioActions.playPause(audio))}
+              />
+            </View>
+          </View>
+        </SafeAreaView>
+      </BlurView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.primary,
   },
   container: {
     padding: "5%",

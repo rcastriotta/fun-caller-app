@@ -78,6 +78,8 @@ const Form = (props) => {
         "Not enough tokens!",
         "You need at least 1 token(s) to make this call."
       );
+    } else if (formState.friendsNum.text === formState.sendFrom.text) {
+      Alert.alert("Sorry!", "You cannot call your own number");
     } else if (!callWarningIgnored) {
       Alert.alert(
         "Warning",
@@ -101,8 +103,6 @@ const Form = (props) => {
         ],
         { cancelable: false }
       );
-    } else if (formState.friendsNum.text === formState.sendFrom.text) {
-      Alert.alert("Sorry!", "You cannot call your own number");
     } else {
       makeCall();
     }

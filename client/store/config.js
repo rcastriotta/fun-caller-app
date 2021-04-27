@@ -9,18 +9,20 @@ import savedReducer from "./reducers/saved";
 import userReducer from "./reducers/user";
 import audioReducer from "./reducers/audio";
 
-const savedPersistConfig = {
+const persistConfig = {
   key: "saved",
   storage: AsyncStorage,
+  whitelist: ["saved", "user"],
 };
 
 const rootReducer = combineReducers({
-  saved: persistReducer(savedPersistConfig, savedReducer),
-  user: persistReducer(savedPersistConfig, userReducer),
+  saved: savedReducer,
+  user: userReducer,
   audio: audioReducer,
 });
 
-const store = createStore(rootReducer, applyMiddleware(ReduxThunk));
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+const store = createStore(persistedReducer, applyMiddleware(ReduxThunk));
 const persistor = persistStore(store);
 
 const ReduxWrapper = (props) => (
