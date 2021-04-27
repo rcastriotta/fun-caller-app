@@ -1,0 +1,10 @@
+{
+  "name": "FunCaller",
+  "displayName": "FunCaller",
+  "expo": {
+    "name": "bare",
+    "slug": "bare",
+    "version": "1.0.0",
+    "assetBundlePatterns": ["**/*"]
+  }
+}
