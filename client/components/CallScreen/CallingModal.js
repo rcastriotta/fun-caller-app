@@ -9,32 +9,28 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import axios from "axios";
+import io from "socket.io-client";
 
 const CallingModal = (props) => {
+  const { sendTo, sendFrom, audio } = props;
   const dispatch = useDispatch();
   const [callState, setCallState] = useState("Calling...");
   const [textColor, setTextColor] = useState("white");
-  const ws = useRef(null);
-  const callId = useRef(null);
+  const socket = useRef();
+  const callId = useRef();
 
   const closeHandler = async () => {
     props.closeModal();
-    if (ws.current) {
+    if (socket.current) {
       if (callId.current) {
         await axios.get(
-          `http://428e7781454f.ngrok.io/cancel/${callId.current}`
+          `http://a3679117b01a.ngrok.io/cancel/${callId.current}`
         );
       }
-      ws.current.close();
+      socket.current.close();
     }
-    ws.current = null;
+    socket.current = null;
     callId.current = null;
-  };
-
-  const errorHandler = (ws, message) => {
-    setTextColor("#FF0247");
-    setCallState(message);
-    ws.close();
   };
 
   useEffect(() => {
@@ -44,25 +40,24 @@ const CallingModal = (props) => {
     setCallState("Calling...");
     setTextColor("white");
 
-    ws.current = new WebSocket("ws://428e7781454f.ngrok.io");
+    socket.current = io("https://a3679117b01a.ngrok.io", {
+      transports: ["websocket"],
+    });
 
-    ws.current.onopen = () => {
-      const { sendTo, sendFrom, audio } = props;
-      ws.current.send(
-        JSON.stringify({
-          sendTo,
-          sendFrom,
-          audio,
-        })
-      );
-    };
+    socket.current.emit("make-call", {
+      sendTo,
+      sendFrom,
+      audio,
+    });
 
-    ws.current.onmessage = (e) => {
-      const { message, type } = JSON.parse(e.data);
+    socket.current.on("callID", ({ message: id }) => {
+      callId.current = id;
+    });
 
+    socket.current.on("call-event", ({ type, message }) => {
       switch (type) {
         case "success":
-          ws.current.close();
+          socket.current.disconnect();
           setTextColor("#00CC6D");
           setCallState("Call completed!");
           dispatch(
@@ -83,20 +78,18 @@ const CallingModal = (props) => {
           setTextColor("#FF0247");
           setCallState(message);
           break;
-        case "id":
-          callId.current = message;
-          break;
-        case "error":
-          errorHandler(ws.current, message);
-          break;
         default:
           setCallState(message);
       }
-    };
+    });
 
-    ws.current.onerror = () => {
-      errorHandler(ws.current, `There's been an error`);
-    };
+    socket.current.on("error", ({ message }) => {
+      setTextColor("#FF0247");
+      setCallState(message);
+      socket.current.disconnect();
+    });
+
+    return () => (socket.current ? socket.current.disconnect() : undefined);
   }, [props.visible]);
 
   return (

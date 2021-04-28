@@ -1,17 +1,13 @@
 const express = require("express");
-const cors = require("cors");
 require("dotenv").config();
-const http = require("http");
 
-const WebSocket = require("ws");
 const plivo = require("plivo");
 
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-const { v4: uuidv4 } = require("uuid");
+const app = require("express")();
+const http = require("http").Server(app);
+const io = require("socket.io")(http);
 
-const baseURL = "https://b09299482efd.ngrok.io";
+const baseURL = "http://a3679117b01a.ngrok.io";
 const client = new plivo.Client(
   process.env.PILVO_AUTH_ID,
   process.env.PILVO_AUTH_TOKEN
@@ -20,74 +16,53 @@ const client = new plivo.Client(
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-wss.on("connection", (ws) => {
-  ws.id = uuidv4();
+io.on("connection", function (socket) {
+  console.log("a user connected");
 
-  ws.on("message", (msg) => {
-    const { sendTo, sendFrom, audio } = JSON.parse(msg);
+  socket.on("make-call", ({ sendTo, sendFrom, audio }) => {
     client.calls
       .create(
         `+1${sendFrom}`,
         `+1${sendTo}`,
-        `${baseURL}/record?url=${audio}&id=${ws.id}`,
+        `${baseURL}/record?url=${audio}&id=${socket.id}`,
         {
           answerMethod: "GET",
           machineDetection: true,
           machineDetectionTime: "5000",
-          machineDetectionUrl: `${baseURL}/detect?id=${ws.id}`,
+          machineDetectionUrl: `${baseURL}/detect?id=${socket.id}`,
           machineDetectionMethod: "GET",
         }
       )
       .then((res) => {
-        ws.send(
-          JSON.stringify({
-            type: "id",
-            message: res.requestUuid,
-          })
-        );
-        ws.send(
-          JSON.stringify({
-            type: "calling",
-            message: "Calling...",
-          })
-        );
+        socket.emit("callID", {
+          type: "id",
+          message: res.requestUuid,
+        });
+        socket.emit("call-event", {
+          type: "calling",
+          message: "Calling...",
+        });
       })
       .catch(() => {
-        ws.terminate();
-        client.send(
-          JSON.stringify({
-            type: "error",
-            message: "Something went wrong.",
-          })
-        );
+        socket.emit("error", {
+          message: "Call failed",
+        });
+        socket.disconnect();
       });
   });
-});
-
-app.get("/cancel/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    await client.calls.hangup(id);
-    res.status(200).end();
-  } catch {
-    res.status(400).end();
-  }
 });
 
 app.all("/record", (req, res) => {
   const { url, id } = req.query;
 
-  wss.clients.forEach((client) => {
-    if (client.id === id) {
-      client.send(
-        JSON.stringify({
-          type: "chatting",
-          message: "Chatting...",
-        })
-      );
-    }
-  });
+  const socket = io.sockets.sockets.get(id);
+
+  if (socket) {
+    socket.emit("call-event", {
+      type: "chatting",
+      message: "Chatting...",
+    });
+  }
 
   const record_params = {
     recordSession: "true",
@@ -109,27 +84,23 @@ app.all("/record", (req, res) => {
 
 app.all("/record_callback", (req, res) => {
   const { id, RecordUrl: recordURL, RecordingDuration: duration } = req.query;
+  const socket = io.sockets.sockets.get(id);
 
-  wss.clients.forEach((client) => {
-    if (client.id === id) {
-      if (parseInt(duration) < 3) {
-        client.send(
-          JSON.stringify({
-            type: "not-answered",
-            message: "Not answered",
-          })
-        );
-      } else {
-        client.send(
-          JSON.stringify({
-            type: "success",
-            message: recordURL,
-          })
-        );
-      }
-      client.terminate();
+  if (socket) {
+    if (parseInt(duration) < 3) {
+      socket.emit("call-event", {
+        type: "not-answered",
+        message: "Not answered",
+      });
+    } else {
+      socket.emit("call-event", {
+        type: "success",
+        message: recordURL,
+      });
     }
-  });
+    socket.disconnect();
+  }
+
   res.status(200).end();
 });
 
@@ -143,5 +114,17 @@ app.all("/detect", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`Listening on port :${PORT}`));
+app.get("/cancel/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await client.calls.hangup(id);
+    res.status(200).end();
+  } catch {
+    res.status(400).end();
+  }
+});
+
+http.listen(3001, function () {
+  console.log("listening on *:3001");
+});
