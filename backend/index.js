@@ -17,11 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 io.on("connection", function (socket) {
-  console.log("a user connected");
-
-  socket.on("make-call", ({ sendTo, sendFrom, audio }) => {
-    client.calls
-      .create(
+  socket.on("make-call", async ({ sendTo, sendFrom, audio }) => {
+    try {
+      const res = await client.calls.create(
         `+1${sendFrom}`,
         `+1${sendTo}`,
         `${baseURL}/record?url=${audio}&id=${socket.id}`,
@@ -32,23 +30,22 @@ io.on("connection", function (socket) {
           machineDetectionUrl: `${baseURL}/detect?id=${socket.id}`,
           machineDetectionMethod: "GET",
         }
-      )
-      .then((res) => {
-        socket.emit("callID", {
-          type: "id",
-          message: res.requestUuid,
-        });
-        socket.emit("call-event", {
-          type: "calling",
-          message: "Calling...",
-        });
-      })
-      .catch(() => {
-        socket.emit("error", {
-          message: "Call failed",
-        });
-        socket.disconnect();
+      );
+      socket.emit("callID", {
+        type: "id",
+        message: res.requestUuid,
       });
+      socket.emit("call-event", {
+        type: "calling",
+        message: "Calling...",
+      });
+    } catch (err) {
+      console.log(err);
+      socket.emit("error", {
+        message: "Call failed",
+      });
+      socket.disconnect();
+    }
   });
 });
 
